@@ -5,6 +5,7 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Confirm, Prompt
 from devkit.utils.gh import gh, gh_json
+from devkit.config import load_config
 
 app = typer.Typer()
 console = Console()
@@ -42,6 +43,17 @@ def suggest(
     ))
 
 
+def run_ai(prompt: str) -> str:
+    cfg = load_config()
+    tool = cfg.get('ai_tool', 'gh-copilot')
+    if tool == 'gemini':
+        result = subprocess.run(['gemini', prompt], capture_output=True, text=True)
+    elif tool == 'claude':
+        result = subprocess.run(['claude', '--no-interactive', prompt], capture_output=True, text=True)
+    else:  # gh-copilot par défaut
+        result = subprocess.run(['gh', 'copilot', '-p', prompt], capture_output=True, text=True)
+    return result.stdout or result.stderr
+
 @app.command()
 def review(
     pr_number: int = typer.Argument(..., help='PR number to review'),
@@ -55,16 +67,10 @@ def review(
         progress.update(t, description='Running AI review...')
         prompt = f'Review this PR titled "{pr_info["title"]}":\n\n{diff[:4000]}'
 
-        result = subprocess.run(
-            ['gh', 'copilot', '-p', prompt],
-            capture_output=True, text=True
-        )
+        output = run_ai(prompt)
+        console.print(Panel(output, title=f'[cyan]AI Review — PR #{pr_number}[/cyan]', border_style='cyan'))
 
-    console.print(Panel(
-        result.stdout or result.stderr,
-        title=f'[cyan]AI Review — PR #{pr_number}[/cyan]',
-        border_style='cyan'
-    ))
+  
 
 
 @app.command()
@@ -77,12 +83,8 @@ def commit():
         raise typer.Exit()
 
     prompt = f'Write a conventional commit message for these staged changes:\n\n{diff[:3000]}'
-    result = subprocess.run(
-        ['gh', 'copilot', '-p', prompt],
-        capture_output=True, text=True
-    )
+    suggested = run_ai(prompt).strip()
 
-    suggested = result.stdout.strip()
     console.print(Panel(suggested, title='[green]Suggested Commit Message[/green]'))
 
     use_it = Confirm.ask('Use this message?')

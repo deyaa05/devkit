@@ -2,15 +2,27 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from devkit.utils.gh import gh, gh_json
+import subprocess
+
 
 app = typer.Typer()
 console = Console()
+
+def fzf_select(items: list[str], prompt: str = 'Select > ') -> str:
+    proc = subprocess.run(
+        ['fzf', f'--prompt={prompt}', '--height=40%', '--border'],
+        input='\n'.join(items),
+        capture_output=True, text=True
+    )
+    return proc.stdout.strip()
+
 
 
 @app.command()
 def issues(
     repo: str = typer.Option('', help='owner/repo (default: current repo)'),
     limit: int = typer.Option(15, help='Max number of issues'),
+    interactive: bool = typer.Option(False, '--interactive', '-i', help='Use fzf to select'),
 ):
     """List open issues in a rich table."""
     args = ['issue', 'list', '--json', 'number,title,state,labels', '--limit', str(limit)]
@@ -28,6 +40,13 @@ def issues(
         table.add_row(str(issue['number']), issue['title'], labels or '—')
 
     console.print(table)
+
+    if interactive:
+        lines = [f"#{i['number']} {i['title']}" for i in data]
+        selected = fzf_select(lines, prompt='Issue > ')
+        if selected:
+            issue_num = selected.split()[0].lstrip('#')
+            gh('issue', 'view', issue_num, '--web')
 
 
 @app.command()
