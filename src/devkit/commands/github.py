@@ -46,7 +46,10 @@ def issues(
         selected = fzf_select(lines, prompt='Issue > ')
         if selected:
             issue_num = selected.split()[0].lstrip('#')
-            gh('issue', 'view', issue_num, '--web')
+            args_web = ['issue', 'view', issue_num, '--web']
+            if repo:
+                args_web += ['--repo', repo]
+            gh(*args_web)
 
 
 @app.command()

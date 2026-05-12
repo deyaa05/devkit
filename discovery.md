@@ -23,4 +23,4 @@ Use case : relire ses changements avant un commit.
 ## fzf
 Fuzzy finder interactif pour n'importe quelle liste.
 Surprenant : fonctionne en pipe avec n'importe quelle commande.
-Use case : chercher dans l'historique git interactivement.
+Use case : chercher dans l'historique git interactivement.test
