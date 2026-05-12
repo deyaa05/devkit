@@ -35,7 +35,7 @@ devkit workflow feature-start <name> --issue 5  # Same + AI implementation plan
 
 ## Demo
 
-[![devkit demo](https://asciinema.org/a/unNO1GRMl5JwLzdn.svg)](https://asciinema.org/a/unNO1GRMl5JwLzdn)
+[![devkit demo](https://asciinema.org/a/QmINTuDP80LhJkFx.svg)](https://asciinema.org/a/QmINTuDP80LhJkFx)
 
 ### 1. List open issues
 ```bash
